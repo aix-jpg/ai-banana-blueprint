@@ -1,3 +1,27 @@
+## 后端 Creem 支付本地运行
+
+在本地添加 `.env`（或手动在系统环境变量里设置）：
+
+```
+VITE_API_BASE_URL=http://localhost:8787
+VITE_APP_URL=http://localhost:8080
+CREEM_API_KEY=your_creem_key
+CREEM_API_BASE_URL=https://api.creem.io
+CREEM_WEBHOOK_SECRET=your_webhook_secret
+```
+
+启动：
+
+```
+npm run server
+```
+
+或前后端同时跑：
+
+```
+npm run dev:full
+```
+
 # Welcome to your Lovable project
 
 ## Project info

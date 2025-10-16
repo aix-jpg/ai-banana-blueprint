@@ -2,16 +2,47 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key';
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
-});
+// 只有在有有效配置时才创建客户端
+let supabase: any = null;
+
+if (SUPABASE_URL !== 'https://placeholder.supabase.co' && SUPABASE_PUBLISHABLE_KEY !== 'placeholder-key') {
+  supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  });
+} else {
+  // 创建一个模拟的客户端，避免应用崩溃
+  console.warn('Supabase配置未设置，使用模拟客户端');
+  supabase = {
+    auth: {
+      signIn: () => Promise.resolve({ data: null, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      signInWithOAuth: () => Promise.resolve({ data: null, error: { message: 'Supabase未配置，请先设置环境变量' } }),
+      onAuthStateChange: (callback: any) => {
+        // 模拟认证状态变化监听器
+        return {
+          data: { subscription: { unsubscribe: () => {} } }
+        };
+      },
+    },
+    from: () => ({
+      select: () => ({ data: [], error: null }),
+      insert: () => ({ data: null, error: null }),
+      update: () => ({ data: null, error: null }),
+      delete: () => ({ data: null, error: null }),
+    }),
+  };
+}
+
+export { supabase };
