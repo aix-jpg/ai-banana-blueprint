@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Sparkles, Zap, Shapes, Lock, ArrowRight, Star, Loader2, Coins, Upload, Image as ImageIcon, Download, Copy, Workflow, RefreshCw, Heart, Trash2 } from "lucide-react";
+import { Sparkles, Zap, Shapes, Lock, ArrowRight, Star, Loader2, Coins, Upload, Image as ImageIcon, Download, Copy, Workflow, RefreshCw, Heart, Trash2, Check } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoginModal } from "@/components/LoginModal";
@@ -29,6 +30,85 @@ const Landing = () => {
   const [isPro, setIsPro] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  type PricingPlan = {
+    name: string;
+    description: string;
+    price: number;
+    productId: string;
+    features: string[];
+    buttonText: string;
+    popular?: boolean;
+    buttonVariant?: "default" | "outline";
+  };
+
+  const pricingPlans: PricingPlan[] = [
+    {
+      name: "免费版",
+      description: "个人体验版",
+      price: 0,
+      productId: "free_starter_monthly",
+      features: ["每日 10 积分", "基础对话功能", "标准响应速度"],
+      buttonText: "立即使用",
+      buttonVariant: "outline"
+    },
+    {
+      name: "专业版",
+      description: "个人专业版",
+      price: 29,
+      productId: "prod_51OxGxDi3NHPZ6HK33XUTi",
+      features: ["每日 100 积分", "GPT-4 模型", "优先响应速度", "邮件支持"],
+      buttonText: "开始订阅",
+      popular: true
+    },
+    {
+      name: "企业版",
+      description: "团队企业版",
+      price: 99,
+      productId: "prod_20S2vnsK1gbbRn1s7Vqize",
+      features: ["每日 1000 积分", "所有模型无限制", "API 集成支持", "专属客户经理"],
+      buttonText: "立即订阅"
+    }
+  ];
+
+  const handleSubscribe = async (plan: PricingPlan) => {
+    if (plan.price === 0) {
+      navigate("/editor");
+      return;
+    }
+    setLoadingPlan(plan.name);
+    try {
+      if (!user || !isAuthenticated) {
+        setShowLoginModal(true);
+        setLoadingPlan(null);
+        return;
+      }
+
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || "http://localhost:8787") + "/api/creem-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: plan.productId,
+          planName: plan.name,
+          amount: plan.price,
+          userId: user.id,
+          email: user.email
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.checkoutUrl) {
+        throw new Error(data.error || "创建支付失败");
+      }
+      window.location.href = data.checkoutUrl;
+    } catch (e: any) {
+      console.error("支付错误:", e);
+      toast.error(e.message || "支付过程中出现错误");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   const handleGetStarted = () => {
     // 如果未登录，直接弹出积分不足页面引导付费
@@ -613,6 +693,64 @@ const Landing = () => {
                 </div>
               </Card>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">选择订阅方案</h2>
+          <p className="text-center text-gray-600 mb-12">简单清晰的定价，随时升级，随时取消</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {pricingPlans.map((plan) => (
+              <Card
+                key={plan.name}
+                className={`relative ${plan.popular ? "border-orange-300 shadow-lg scale-105" : "border-gray-200"}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-orange-500 text-white px-4 py-1">推荐</Badge>
+                  </div>
+                )}
+
+                <div className="text-center pb-4 pt-6">
+                  <h3 className="text-2xl font-bold">{plan.name}</h3>
+                  <p className="text-gray-600 mt-2">{plan.description}</p>
+                </div>
+
+                <div className="px-6">
+                  <div className="text-center mb-6">
+                    <span className="text-4xl font-bold text-gray-900">¥{plan.price}</span>
+                    <span className="text-gray-600 ml-1">/月</span>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center text-sm">
+                        <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className={`w-full ${plan.popular ? "bg-orange-500 hover:bg-orange-600 text-white" : ""}`}
+                    variant={plan.buttonVariant || "default"}
+                    onClick={() => handleSubscribe(plan)}
+                    disabled={loadingPlan === plan.name}
+                  >
+                    {loadingPlan === plan.name ? "处理中..." : plan.buttonText}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-gray-600 mb-4">所有方案都包含7天免费试用</p>
+            <Button variant="outline" onClick={() => navigate('/pricing')}>查看更多方案</Button>
           </div>
         </div>
       </section>
