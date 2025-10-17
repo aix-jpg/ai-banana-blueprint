@@ -1,5 +1,5 @@
 // Vercel API 路由 - Creem 支付处理
-const fetch = require('node-fetch');
+const https = require('https');
 
 module.exports = async (req, res) => {
   // 设置 CORS 头
@@ -51,35 +51,57 @@ module.exports = async (req, res) => {
       }
     };
 
-    // 调用 Creem API
-    const url = `${CREEM_API_BASE_URL}/v1/checkouts`;
-    const resp = await fetch(url, {
+    // 使用 Node.js 内置的 https 模块调用 Creem API
+    const url = new URL(`${CREEM_API_BASE_URL}/v1/checkouts`);
+    const postData = JSON.stringify(payload);
+    
+    const options = {
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: url.pathname,
       method: 'POST',
       headers: {
         'x-api-key': CREEM_API_KEY,
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const result = await new Promise((resolve, reject) => {
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error('Invalid JSON response'));
+            }
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+          }
+        });
+      });
+      
+      req.on('error', (e) => {
+        reject(e);
+      });
+      
+      req.write(postData);
+      req.end();
     });
     
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.error('Creem API 错误详情:', {
-        status: resp.status,
-        statusText: resp.statusText,
-        url,
-        payload,
-        response: text
-      });
-      return res.status(500).json({ error: `Creem API 错误 ${resp.status}`, detail: text });
+    const checkoutUrl = result.checkout_url || result.url;
+    if (!checkoutUrl) {
+      throw new Error('Creem API 未返回 checkout_url');
     }
-    
-    const data = await resp.json();
-    const checkoutUrl = data.checkout_url || data.url;
     
     return res.json({ 
       checkoutUrl, 
-      sessionId: data.id || data.checkout_id 
+      sessionId: result.id || result.checkout_id 
     });
     
   } catch (e) {
