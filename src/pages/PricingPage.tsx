@@ -42,7 +42,7 @@ const pricingPlans: PricingPlan[] = [
     name: "专业版",
     description: "个人专业版",
     price: 29,
-    productId: "prod_51OxGxDi3NHPZ6HK33XUTi",
+    productId: "prod_7Wrs8LVI2YGR8YDmFjaNIY",
     features: [
       "每日 100 积分",
       "GPT-4 模型",
@@ -56,7 +56,7 @@ const pricingPlans: PricingPlan[] = [
     name: "企业版",
     description: "团队企业版",
     price: 99,
-    productId: "prod_20S2vnsK1gbbRn1s7Vqize",
+    productId: "prod_6WSrhBXtP4dlRJa6OzrgcV",
     features: [
       "每日 1000 积分",
       "所有模型无限制",
