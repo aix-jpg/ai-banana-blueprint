@@ -1,0 +1,11 @@
+
+VITE_SUPABASE_URL="https://qhusxxshcizlydqidfvp.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFodXN4eHNoY2l6bHlkcWlkZnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNDkxMDksImV4cCI6MjA3NTgyNTEwOX0.XiGdyz1Xa6xVroSfsugmTMKmA70j8Z7SfbtxvO8rLOI"
+VITE_APP_URL=https://ai-banana-blueprint.vercel.app
+VITE_API_BASE_URL=https://ai-banana-blueprint.vercel.app
+
+CREEM_API_KEY=creem_test_5lqwP22TPFFQXuY4O5tkX9
+CREEM_API_BASE_URL=https://test-api.creem.io
+NEXT_PUBLIC_APP_URL=https://ai-banana-blueprint.vercel.app
+CREEM_WEBHOOK_SECRET=whsec_1jiWoSfHKRbyrAj22SzgRO
+NODE_ENV=production
