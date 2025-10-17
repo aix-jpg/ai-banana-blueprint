@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { toast } from "sonner";
+import { creemClient } from "@/services/creemClient";
 
 interface PricingPlan {
   name: string;
@@ -89,24 +90,21 @@ export default function PricingPage() {
         return;
       }
       
-      // 走真实支付：调用后端创建 Creem Checkout
-      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787') + '/api/simple-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: plan.productId,
-          planName: plan.name,
-          amount: plan.price,
-          userId: user.id,
-          email: user.email
-        })
+      // 使用客户端 Creem 服务 - 避免 Vercel 函数崩溃问题
+      const result = await creemClient.createCheckoutSession({
+        productId: plan.productId,
+        planName: plan.name,
+        amount: plan.price,
+        userId: user.id,
+        email: user.email
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.checkoutUrl) {
-        throw new Error(data.error || '创建支付失败');
+      if (!result.success || !result.checkoutUrl) {
+        throw new Error(result.error || '创建支付失败');
       }
-      window.location.href = data.checkoutUrl;
+
+      // 跳转到支付页面
+      window.location.href = result.checkoutUrl;
     } catch (error) {
       console.error("支付错误:", error);
       toast.error("支付过程中出现错误，请稍后重试");
