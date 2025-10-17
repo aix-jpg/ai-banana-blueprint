@@ -1,5 +1,8 @@
 {
   "functions": {
+    "api/creem-proxy-edge.js": {
+      "runtime": "edge"
+    },
     "api/creem-proxy.js": {
       "maxDuration": 30
     },
