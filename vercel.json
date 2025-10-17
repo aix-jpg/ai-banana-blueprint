@@ -1,5 +1,8 @@
 {
   "functions": {
+    "api/creem-proxy.js": {
+      "maxDuration": 30
+    },
     "api/creem-webhook.js": {
       "maxDuration": 30
     }
