@@ -25,7 +25,13 @@ class CreemClientService {
   constructor() {
     // 从环境变量获取配置
     this.apiKey = import.meta.env.VITE_CREEM_API_KEY || '';
-    this.baseUrl = import.meta.env.VITE_CREEM_API_BASE_URL || 'https://api.creem.io';
+    this.baseUrl = import.meta.env.VITE_CREEM_API_BASE_URL || 'https://test-api.creem.io';
+    
+    console.log('Creem 客户端配置:', {
+      hasApiKey: !!this.apiKey,
+      baseUrl: this.baseUrl,
+      env: import.meta.env.MODE
+    });
     
     if (!this.apiKey) {
       console.warn('Creem API Key 未配置，请设置 VITE_CREEM_API_KEY 环境变量');
