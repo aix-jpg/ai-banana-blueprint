@@ -23,18 +23,19 @@ class CreemClientService {
   private baseUrl: string;
 
   constructor() {
-    // 从环境变量获取配置
-    this.apiKey = import.meta.env.VITE_CREEM_API_KEY || '';
+    // 从环境变量获取配置，添加备用配置
+    this.apiKey = import.meta.env.VITE_CREEM_API_KEY || 'creem_test_5lqwP22TPFFQXuY4O5tkX9';
     this.baseUrl = import.meta.env.VITE_CREEM_API_BASE_URL || 'https://test-api.creem.io';
     
     console.log('Creem 客户端配置:', {
       hasApiKey: !!this.apiKey,
       baseUrl: this.baseUrl,
-      env: import.meta.env.MODE
+      env: import.meta.env.MODE,
+      isProduction: import.meta.env.PROD
     });
     
     if (!this.apiKey) {
-      console.warn('Creem API Key 未配置，请设置 VITE_CREEM_API_KEY 环境变量');
+      console.warn('Creem API Key 未配置，使用默认测试 Key');
     }
   }
 
