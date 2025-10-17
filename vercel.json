@@ -3,6 +3,12 @@
     "api/creem-checkout.js": {
       "maxDuration": 30
     },
+    "api/creem-checkout-edge.js": {
+      "runtime": "edge"
+    },
+    "api/simple-checkout.js": {
+      "maxDuration": 10
+    },
     "api/creem-webhook.js": {
       "maxDuration": 30
     },

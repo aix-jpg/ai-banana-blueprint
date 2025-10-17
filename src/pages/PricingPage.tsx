@@ -90,7 +90,7 @@ export default function PricingPage() {
       }
       
       // 走真实支付：调用后端创建 Creem Checkout
-      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787') + '/api/creem-checkout', {
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787') + '/api/simple-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
