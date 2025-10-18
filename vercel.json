@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/creem-proxy.js": {
+    "api/creem-checkout.js": {
       "maxDuration": 30
     },
     "api/creem-webhook.js": {

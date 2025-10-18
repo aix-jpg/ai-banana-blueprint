@@ -100,23 +100,40 @@ export default function PricingPage() {
         email: user.email
       });
 
-      // 直接跳转到成功页面进行测试
-      console.log('直接跳转到成功页面进行测试');
-      toast.info("正在处理支付...");
+      // 调用真实的 Creem API
+      console.log('调用 Creem API');
+      toast.info("正在创建支付会话...");
       
-      // 构建成功页面 URL
-      const successUrl = `${window.location.origin}/payment/success?` +
-        `plan=${encodeURIComponent(plan.name)}&` +
-        `amount=${plan.price}&` +
-        `userId=${user.id}&` +
-        `email=${encodeURIComponent(user.email)}&` +
-        `mock=true&` +
-        `sessionId=test_${Date.now()}`;
+      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787') + '/api/creem-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: plan.productId,
+          planName: plan.name,
+          amount: plan.price,
+          userId: user.id,
+          email: user.email
+        })
+      });
 
-      console.log('准备跳转到:', successUrl);
+      console.log('API 响应状态:', res.status);
       
-      // 直接跳转
-      window.location.href = successUrl;
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `API 错误: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log('支付会话创建成功:', data);
+
+      if (!data.checkoutUrl) {
+        throw new Error('未返回支付链接');
+      }
+
+      console.log('准备跳转到 Creem 支付页面:', data.checkoutUrl);
+      
+      // 跳转到 Creem 支付页面
+      window.location.href = data.checkoutUrl;
     } catch (error) {
       console.error("支付错误:", error);
       toast.error("支付过程中出现错误，请稍后重试");
@@ -186,18 +203,6 @@ export default function PricingPage() {
                   disabled={loadingPlan === plan.name}
                 >
                   {loadingPlan === plan.name ? "处理中..." : plan.buttonText}
-                </Button>
-                
-                {/* 测试按钮 */}
-                <Button 
-                  variant="outline"
-                  className="w-full mt-2"
-                  onClick={() => {
-                    console.log('测试跳转按钮被点击');
-                    window.location.href = '/payment/success?plan=测试方案&amount=29&mock=true';
-                  }}
-                >
-                  测试跳转
                 </Button>
               </CardContent>
             </Card>
