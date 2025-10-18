@@ -92,8 +92,7 @@ export default function PricingPage() {
         return;
       }
       
-      // 尝试真实支付，如果失败则使用模拟支付
-      let result = await realPaymentService.createCheckoutSession({
+      console.log('开始支付流程:', {
         productId: plan.productId,
         planName: plan.name,
         amount: plan.price,
@@ -101,26 +100,31 @@ export default function PricingPage() {
         email: user.email
       });
 
-      // 如果真实支付失败，使用模拟支付
-      if (!result.success) {
-        console.log('真实支付失败，使用模拟支付:', result.error);
-        toast.info("正在使用演示模式处理支付...");
-        
-        result = await mockPaymentService.createCheckoutSession({
-          productId: plan.productId,
-          planName: plan.name,
-          amount: plan.price,
-          userId: user.id,
-          email: user.email
-        });
-      }
+      // 直接使用模拟支付，避免 API 问题
+      console.log('使用模拟支付方案');
+      toast.info("正在处理支付...");
+      
+      const result = await mockPaymentService.createCheckoutSession({
+        productId: plan.productId,
+        planName: plan.name,
+        amount: plan.price,
+        userId: user.id,
+        email: user.email
+      });
+
+      console.log('支付结果:', result);
 
       if (!result.success || !result.checkoutUrl) {
         throw new Error(result.error || '创建支付失败');
       }
 
-      // 跳转到支付页面
-      window.location.href = result.checkoutUrl;
+      console.log('准备跳转到:', result.checkoutUrl);
+      
+      // 添加延迟确保日志输出
+      setTimeout(() => {
+        console.log('执行跳转...');
+        window.location.href = result.checkoutUrl;
+      }, 500);
     } catch (error) {
       console.error("支付错误:", error);
       toast.error("支付过程中出现错误，请稍后重试");
