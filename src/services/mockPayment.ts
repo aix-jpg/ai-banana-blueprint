@@ -35,19 +35,14 @@ class MockPaymentService {
       // 模拟支付处理延迟
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 根据产品 ID 生成不同的模拟 URL
-      let mockCheckoutUrl: string;
-      
-      switch (request.productId) {
-        case 'prod_7Wrs8LVI2YGR8YDmFjaNIY': // 专业版
-          mockCheckoutUrl = `https://checkout.stripe.com/pay/cs_test_pro_${Date.now()}`;
-          break;
-        case 'prod_6WSrhBXtP4dlRJa6OzrgcV': // 企业版
-          mockCheckoutUrl = `https://checkout.stripe.com/pay/cs_test_enterprise_${Date.now()}`;
-          break;
-        default:
-          mockCheckoutUrl = `https://checkout.stripe.com/pay/cs_test_${Date.now()}`;
-      }
+      // 生成模拟支付成功页面 URL
+      const mockCheckoutUrl = `${window.location.origin}/payment/success?` +
+        `plan=${encodeURIComponent(request.planName)}&` +
+        `amount=${request.amount}&` +
+        `userId=${request.userId}&` +
+        `email=${encodeURIComponent(request.email)}&` +
+        `mock=true&` +
+        `sessionId=mock_${Date.now()}`;
 
       return {
         success: true,

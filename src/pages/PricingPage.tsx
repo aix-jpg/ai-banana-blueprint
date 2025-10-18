@@ -14,6 +14,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { toast } from "sonner";
 import { creemClient } from "@/services/creemClient";
 import { mockPaymentService } from "@/services/mockPayment";
+import { realPaymentService } from "@/services/realPayment";
 
 interface PricingPlan {
   name: string;
@@ -91,15 +92,28 @@ export default function PricingPage() {
         return;
       }
       
-      // 使用模拟支付方案 - 避免 Vercel 函数问题
-      console.log('使用模拟支付方案');
-      const result = await mockPaymentService.createCheckoutSession({
+      // 尝试真实支付，如果失败则使用模拟支付
+      let result = await realPaymentService.createCheckoutSession({
         productId: plan.productId,
         planName: plan.name,
         amount: plan.price,
         userId: user.id,
         email: user.email
       });
+
+      // 如果真实支付失败，使用模拟支付
+      if (!result.success) {
+        console.log('真实支付失败，使用模拟支付:', result.error);
+        toast.info("正在使用演示模式处理支付...");
+        
+        result = await mockPaymentService.createCheckoutSession({
+          productId: plan.productId,
+          planName: plan.name,
+          amount: plan.price,
+          userId: user.id,
+          email: user.email
+        });
+      }
 
       if (!result.success || !result.checkoutUrl) {
         throw new Error(result.error || '创建支付失败');
