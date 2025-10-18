@@ -100,31 +100,23 @@ export default function PricingPage() {
         email: user.email
       });
 
-      // 直接使用模拟支付，避免 API 问题
-      console.log('使用模拟支付方案');
+      // 直接跳转到成功页面进行测试
+      console.log('直接跳转到成功页面进行测试');
       toast.info("正在处理支付...");
       
-      const result = await mockPaymentService.createCheckoutSession({
-        productId: plan.productId,
-        planName: plan.name,
-        amount: plan.price,
-        userId: user.id,
-        email: user.email
-      });
+      // 构建成功页面 URL
+      const successUrl = `${window.location.origin}/payment/success?` +
+        `plan=${encodeURIComponent(plan.name)}&` +
+        `amount=${plan.price}&` +
+        `userId=${user.id}&` +
+        `email=${encodeURIComponent(user.email)}&` +
+        `mock=true&` +
+        `sessionId=test_${Date.now()}`;
 
-      console.log('支付结果:', result);
-
-      if (!result.success || !result.checkoutUrl) {
-        throw new Error(result.error || '创建支付失败');
-      }
-
-      console.log('准备跳转到:', result.checkoutUrl);
+      console.log('准备跳转到:', successUrl);
       
-      // 添加延迟确保日志输出
-      setTimeout(() => {
-        console.log('执行跳转...');
-        window.location.href = result.checkoutUrl;
-      }, 500);
+      // 直接跳转
+      window.location.href = successUrl;
     } catch (error) {
       console.error("支付错误:", error);
       toast.error("支付过程中出现错误，请稍后重试");
@@ -194,6 +186,18 @@ export default function PricingPage() {
                   disabled={loadingPlan === plan.name}
                 >
                   {loadingPlan === plan.name ? "处理中..." : plan.buttonText}
+                </Button>
+                
+                {/* 测试按钮 */}
+                <Button 
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    console.log('测试跳转按钮被点击');
+                    window.location.href = '/payment/success?plan=测试方案&amount=29&mock=true';
+                  }}
+                >
+                  测试跳转
                 </Button>
               </CardContent>
             </Card>
