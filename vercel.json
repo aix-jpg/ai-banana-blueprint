@@ -3,6 +3,9 @@
     "api/creem-checkout.js": {
       "maxDuration": 30
     },
+    "api/test.js": {
+      "maxDuration": 10
+    },
     "api/creem-webhook.js": {
       "maxDuration": 30
     }

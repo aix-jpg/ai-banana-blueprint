@@ -1,25 +1,23 @@
-// Creem 支付处理 - 稳定版本
-const https = require('https');
-
+// Creem 支付处理 - 基于官方模板的稳定版本
 module.exports = async (req, res) => {
-  try {
-    // 设置 CORS 头
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, x-api-key');
-    
-    // 处理预检请求
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
-      return;
-    }
-    
-    // 只允许 POST 请求
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed' });
-      return;
-    }
+  // 设置 CORS 头
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, x-api-key');
+  
+  // 处理预检请求
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  // 只允许 POST 请求
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed' });
+    return;
+  }
 
+  try {
     const { productId, planName, amount, userId, email } = req.body || {};
     
     // 检查必要参数
@@ -38,7 +36,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // 构建请求数据
+    // 构建请求数据 - 按照官方模板格式
     const payload = {
       product_id: productId,
       success_url: `${APP_URL}/payment/success`,
@@ -57,51 +55,32 @@ module.exports = async (req, res) => {
       hasApiKey: !!CREEM_API_KEY
     });
 
-    // 使用 Node.js 内置的 https 模块
-    const url = new URL(`${CREEM_API_BASE_URL}/v1/checkouts`);
-    const postData = JSON.stringify(payload);
-    
-    const options = {
-      hostname: url.hostname,
-      port: url.port || 443,
-      path: url.pathname,
+    // 使用 fetch API (Node.js 18+ 内置)
+    const response = await fetch(`${CREEM_API_BASE_URL}/v1/checkouts`, {
       method: 'POST',
       headers: {
         'x-api-key': CREEM_API_KEY,
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
         'User-Agent': 'AI-Banana-Blueprint/1.0'
-      }
-    };
-
-    const result = await new Promise((resolve, reject) => {
-      const req = https.request(options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              resolve(JSON.parse(data));
-            } catch (e) {
-              reject(new Error('Invalid JSON response'));
-            }
-          } else {
-            reject(new Error(`HTTP ${res.statusCode}: ${data}`));
-          }
-        });
-      });
-      
-      req.on('error', (e) => {
-        reject(e);
-      });
-      
-      req.write(postData);
-      req.end();
+      },
+      body: JSON.stringify(payload)
     });
     
-    const checkoutUrl = result.checkout_url || result.url;
+    console.log('Creem API 响应状态:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Creem API 错误:', response.status, response.statusText, errorText);
+      res.status(500).json({ 
+        error: `Creem API 错误 ${response.status}`, 
+        detail: errorText 
+      });
+      return;
+    }
+    
+    const data = await response.json();
+    const checkoutUrl = data.checkout_url || data.url;
+    
     if (!checkoutUrl) {
       res.status(500).json({ error: 'Creem API 未返回 checkout_url' });
       return;
@@ -109,11 +88,11 @@ module.exports = async (req, res) => {
     
     res.json({ 
       checkoutUrl, 
-      sessionId: result.id || result.checkout_id 
+      sessionId: data.id || data.checkout_id 
     });
     
   } catch (error) {
-    console.error('Creem API 错误:', error);
+    console.error('API 错误:', error);
     res.status(500).json({ error: error.message || '创建支付失败' });
   }
 };
